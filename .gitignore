@@ -1,0 +1,13 @@
+# Archivos de configuración con credenciales reales
+config/config.php
+
+# Fotos subidas por los usuarios
+uploads/fotos/*
+!uploads/fotos/.gitkeep
+!uploads/fotos/.htaccess
+!uploads/fotos/index.php
+
+# Logs y archivos temporales
+*.log
+.DS_Store
+Thumbs.db
