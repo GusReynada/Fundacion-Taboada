@@ -77,7 +77,7 @@ $maxPhotoMb = (int) round(MAX_PHOTO_SIZE_BYTES / (1024 * 1024));
                             name="nombre"
                             value="<?= e($old['nombre'] ?? '') ?>"
                             placeholder="Ej. María Fernanda López García"
-                            maxlength="150"
+                            maxlength="200"
                             autocomplete="name"
                             required
                             aria-describedby="error-nombre"
@@ -178,7 +178,7 @@ $maxPhotoMb = (int) round(MAX_PHOTO_SIZE_BYTES / (1024 * 1024));
                             name="correo"
                             value="<?= e($old['correo'] ?? '') ?>"
                             placeholder="ejemplo@correo.com"
-                            maxlength="180"
+                            maxlength="250"
                             autocomplete="email"
                             required
                             aria-describedby="error-correo"

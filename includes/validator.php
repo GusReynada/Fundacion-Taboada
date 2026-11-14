@@ -193,8 +193,8 @@ function validateRegistrationInput(
     // Nombre
     if ($nombre === '') {
         $errors['nombre'] = 'El nombre es obligatorio.';
-    } elseif (utf8Length($nombre) < 2 || utf8Length($nombre) > 150) {
-        $errors['nombre'] = 'El nombre debe tener entre 2 y 150 caracteres.';
+    } elseif (utf8Length($nombre) < 2 || utf8Length($nombre) > 200) {
+        $errors['nombre'] = 'El nombre debe tener entre 2 y 200 caracteres.';
     }
 
     // Carrera
@@ -214,7 +214,7 @@ function validateRegistrationInput(
     // Correo
     if ($correo === '') {
         $errors['correo'] = 'El correo electrónico es obligatorio.';
-    } elseif (utf8Length($correo) > 180 || filter_var($correo, FILTER_VALIDATE_EMAIL) === false) {
+    } elseif (utf8Length($correo) > 250 || filter_var($correo, FILTER_VALIDATE_EMAIL) === false) {
         $errors['correo'] = 'Ingresa un correo electrónico válido.';
     }
 
@@ -277,4 +277,70 @@ function validateRegistrationInput(
         'photo'  => $photoValidation['data'],
         'errors' => $errors,
     ];
+}
+
+/**
+ * Genera una versión miniatura (máx. 300x300 px) en binario para `aloFotoMiniatura`.
+ * Devuelve null si GD no está disponible o si la imagen no puede procesarse.
+ */
+function createPhotoThumbnail(string $binaryData, string $mime, int $maxDimension = 300): ?string
+{
+    if ($binaryData === '' || !function_exists('imagecreatefromstring')) {
+        return null;
+    }
+
+    $source = @imagecreatefromstring($binaryData);
+    if ($source === false) {
+        return null;
+    }
+
+    $origWidth = imagesx($source);
+    $origHeight = imagesy($source);
+    if ($origWidth < 1 || $origHeight < 1) {
+        return null;
+    }
+
+    if ($origWidth <= $maxDimension && $origHeight <= $maxDimension) {
+        $targetWidth = $origWidth;
+        $targetHeight = $origHeight;
+    } else {
+        $scale = min($maxDimension / $origWidth, $maxDimension / $origHeight);
+        $targetWidth = max(1, (int) round($origWidth * $scale));
+        $targetHeight = max(1, (int) round($origHeight * $scale));
+    }
+
+    $thumb = imagecreatetruecolor($targetWidth, $targetHeight);
+    if ($thumb === false) {
+        return null;
+    }
+
+    if ($mime === 'image/png' || $mime === 'image/webp') {
+        imagealphablending($thumb, false);
+        imagesavealpha($thumb, true);
+        $transparent = imagecolorallocatealpha($thumb, 0, 0, 0, 127);
+        if ($transparent !== false) {
+            imagefilledrectangle($thumb, 0, 0, $targetWidth, $targetHeight, $transparent);
+        }
+    }
+
+    if (!imagecopyresampled($thumb, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $origWidth, $origHeight)) {
+        return null;
+    }
+
+    ob_start();
+    $saved = false;
+    if ($mime === 'image/png' && function_exists('imagepng')) {
+        $saved = imagepng($thumb, null, 6);
+    } elseif ($mime === 'image/webp' && function_exists('imagewebp')) {
+        $saved = imagewebp($thumb, null, 82);
+    } elseif (function_exists('imagejpeg')) {
+        $saved = imagejpeg($thumb, null, 82);
+    }
+    $output = ob_get_clean();
+
+    if (!$saved || !is_string($output) || $output === '') {
+        return null;
+    }
+
+    return $output;
 }

@@ -154,8 +154,8 @@
 
         if (!nombre) {
             errors.nombre = 'El nombre es obligatorio.';
-        } else if (nombre.length < 2 || nombre.length > 150) {
-            errors.nombre = 'El nombre debe tener entre 2 y 150 caracteres.';
+        } else if (nombre.length < 2 || nombre.length > 200) {
+            errors.nombre = 'El nombre debe tener entre 2 y 200 caracteres.';
         }
 
         const photoError = validateSelectedPhoto(foto);
@@ -178,7 +178,7 @@
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!correo) {
             errors.correo = 'El correo electrónico es obligatorio.';
-        } else if (!emailPattern.test(correo) || correo.length > 180) {
+        } else if (!emailPattern.test(correo) || correo.length > 250) {
             errors.correo = 'Ingresa un correo electrónico válido.';
         }
 

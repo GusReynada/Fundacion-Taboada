@@ -2,15 +2,15 @@
 
 Sitio web de formulario único en **HTML5, CSS3, JavaScript y PHP (PDO) + MySQL**, preparado para subirse directamente a **Hostinger** (o probarse en local con XAMPP).
 
-## Campos incluidos
+## Campos incluidos (tabla `alumnos`)
 
-- **Nombre** (`nombre`)
-- **Foto** (`foto` — validada como JPG, PNG o WEBP hasta 5 MB; se guarda en `uploads/fotos/` y su ruta relativa en MySQL)
-- **Carrera** (`carrera`)
-- **Universidad** (`universidad`)
-- **Correo** (`correo` — único en la tabla)
-- **Teléfono** (`telefono`)
-- **Fecha de cumpleaños** (`fecha_cumpleanos`)
+- **Nombre** (`aloNombreCompleto`)
+- **Foto** (`aloFoto` y `aloFotoMiniatura` — validada como JPG, PNG o WEBP hasta 5 MB; se almacena en formato binario `LONGBLOB` junto con su miniatura generada si GD está activo)
+- **Carrera** (`aloCarrera`)
+- **Universidad** (`aloUniversidad`)
+- **Correo** (`aloCorreo`)
+- **Teléfono** (`aloTelefono`)
+- **Fecha de cumpleaños** (`aloFechaNacimiento`)
 
 ## Estructura del proyecto
 
@@ -29,7 +29,7 @@ Sitio web de formulario único en **HTML5, CSS3, JavaScript y PHP (PDO) + MySQL*
 │   └── database.php           # Conexión PDO a MySQL con prepared statements
 ├── database/
 │   ├── .htaccess              # Bloquea acceso HTTP directo a los scripts SQL
-│   └── schema.sql             # Script para crear la tabla `registros` en phpMyAdmin
+│   └── schema.sql             # Script para crear la tabla `alumnos` en phpMyAdmin
 ├── includes/
 │   ├── .htaccess              # Bloquea acceso HTTP directo
 │   ├── bootstrap.php          # Sesión segura, CSRF y helpers
@@ -52,7 +52,7 @@ Sitio web de formulario único en **HTML5, CSS3, JavaScript y PHP (PDO) + MySQL*
 1. En la misma sección de **Bases de datos**, haz clic en **Entrar a phpMyAdmin** junto a tu base de datos.
 2. Asegúrate de seleccionar tu base de datos en la columna izquierda.
 3. Ve a la pestaña **Importar**, selecciona el archivo `database/schema.sql` y haz clic en **Importar** (o **Continuar**).
-4. Verifica que se haya creado la tabla `registros`.
+4. Verifica que se haya creado la tabla `alumnos`.
 
 ### 3. Configurar tus credenciales en `config/config.php`
 Si descargaste o clonaste este proyecto desde GitHub, copia primero `config/config.example.php` como `config/config.php` (este último está excluido en `.gitignore` para proteger tus credenciales). Luego abre `config/config.php` y reemplaza los valores de conexión:
@@ -60,19 +60,17 @@ Si descargaste o clonaste este proyecto desde GitHub, copia primero `config/conf
 ```php
 define('DB_HOST', 'localhost');
 define('DB_PORT', '3306');
-define('DB_NAME', 'u123456789_fundacion'); // Tu base de datos de Hostinger
-define('DB_USER', 'u123456789_admin');     // Tu usuario MySQL de Hostinger
+define('DB_NAME', 'u123456789_taboada');   // Tu base de datos de Hostinger
+define('DB_USER', 'u123456789_taboada');   // Tu usuario MySQL de Hostinger
 define('DB_PASS', 'TU_CONTRASENA_MYSQL');  // Tu contraseña MySQL
 ```
 
-> **Nota:** En Hostinger, el host MySQL normalmente es `localhost`. Deja `APP_DEBUG` en `false` en producción para no exponer detalles internos en caso de error.
+> **Nota:** En Hostinger, el host MySQL puede ser `localhost` o la IP de MySQL remoto que te indique hPanel. Deja `APP_DEBUG` en `false` en producción para no exponer detalles internos en caso de error.
 
 ### 4. Subir los archivos a Hostinger
 1. Entra a **Administrador de archivos** en hPanel (o conéctate por FTP con FileZilla).
 2. Abre la carpeta `public_html/` (o una subcarpeta como `public_html/registro/` si quieres que esté en una ruta específica).
-3. Sube todo el contenido del proyecto **manteniendo la estructura de carpetas** y asegurándote de incluir los archivos `.htaccess`.
-4. Verifica que la carpeta `uploads/fotos/` tenga permisos `755` para que PHP pueda guardar las fotografías subidas.
-5. Si quieres permitir que una misma persona registre el mismo correo más de una vez, elimina el índice `uk_registros_correo` en phpMyAdmin o quita `UNIQUE KEY uk_registros_correo` en `database/schema.sql` antes de importar.
+3. Sube todo el contenido del proyecto **manteniendo la estructura de carpetas** y asegurándote de incluir los archivos `.htaccess` y `config/config.php`.
 
 ---
 

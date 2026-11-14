@@ -101,55 +101,31 @@ if (!isDatabaseConfigured()) {
 
 $photo = $validation['photo'];
 
-if (!is_dir(UPLOAD_PHOTOS_DIR)) {
-    if (!@mkdir(UPLOAD_PHOTOS_DIR, 0755, true) && !is_dir(UPLOAD_PHOTOS_DIR)) {
-        error_log('[Fundacion Taboada] No se pudo crear el directorio de fotos: ' . UPLOAD_PHOTOS_DIR);
-        sendResponse(
-            false,
-            500,
-            'No se pudo preparar la carpeta de almacenamiento para la foto.',
-            [],
-            $data
-        );
-    }
-}
-
-if (!is_writable(UPLOAD_PHOTOS_DIR)) {
-    error_log('[Fundacion Taboada] Directorio sin permisos de escritura: ' . UPLOAD_PHOTOS_DIR);
+$photoBytes = @file_get_contents($photo['tmp_name']);
+if ($photoBytes === false || $photoBytes === '') {
+    error_log('[Fundacion Taboada] No se pudo leer el archivo temporal de la fotografía.');
     sendResponse(
         false,
         500,
-        'El servidor no tiene permisos de escritura para guardar la foto.',
+        'No se pudo procesar el archivo de la fotografía. Inténtalo nuevamente.',
         [],
         $data
     );
 }
 
-$fileName = sprintf('%s_%s.%s', date('Ymd_His'), bin2hex(random_bytes(8)), $photo['extension']);
-$destinationPath = rtrim(UPLOAD_PHOTOS_DIR, '/\\') . DIRECTORY_SEPARATOR . $fileName;
-$relativePhotoPath = rtrim(UPLOAD_PHOTOS_RELATIVE_DIR, '/') . '/' . $fileName;
-
-if (!move_uploaded_file($photo['tmp_name'], $destinationPath)) {
-    error_log('[Fundacion Taboada] Falló move_uploaded_file hacia: ' . $destinationPath);
-    sendResponse(
-        false,
-        500,
-        'No se pudo guardar la fotografía en el servidor. Inténtalo nuevamente.',
-        [],
-        $data
-    );
-}
+$thumbnailBytes = createPhotoThumbnail($photoBytes, $photo['mime']);
 
 try {
     $pdo = getDatabaseConnection();
-    $sql = 'INSERT INTO registros (
-                nombre,
-                foto,
-                carrera,
-                universidad,
-                correo,
-                telefono,
-                fecha_cumpleanos
+    $sql = 'INSERT INTO alumnos (
+                aloNombreCompleto,
+                aloFoto,
+                aloCarrera,
+                aloUniversidad,
+                aloCorreo,
+                aloTelefono,
+                aloFechaNacimiento,
+                aloFotoMiniatura
             ) VALUES (
                 :nombre,
                 :foto,
@@ -157,24 +133,26 @@ try {
                 :universidad,
                 :correo,
                 :telefono,
-                :fecha_cumpleanos
+                :fecha_nacimiento,
+                :foto_miniatura
             )';
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        ':nombre'           => $data['nombre'],
-        ':foto'             => $relativePhotoPath,
-        ':carrera'          => $data['carrera'],
-        ':universidad'      => $data['universidad'],
-        ':correo'           => $data['correo'],
-        ':telefono'         => $data['telefono'],
-        ':fecha_cumpleanos' => $data['fecha_cumpleanos'],
-    ]);
-} catch (PDOException $e) {
-    if (is_file($destinationPath)) {
-        @unlink($destinationPath);
+    $stmt->bindValue(':nombre', $data['nombre'], PDO::PARAM_STR);
+    $stmt->bindValue(':foto', $photoBytes, PDO::PARAM_LOB);
+    $stmt->bindValue(':carrera', $data['carrera'], PDO::PARAM_STR);
+    $stmt->bindValue(':universidad', $data['universidad'], PDO::PARAM_STR);
+    $stmt->bindValue(':correo', $data['correo'], PDO::PARAM_STR);
+    $stmt->bindValue(':telefono', $data['telefono'], PDO::PARAM_STR);
+    $stmt->bindValue(':fecha_nacimiento', $data['fecha_cumpleanos'], PDO::PARAM_STR);
+    if ($thumbnailBytes !== null) {
+        $stmt->bindValue(':foto_miniatura', $thumbnailBytes, PDO::PARAM_LOB);
+    } else {
+        $stmt->bindValue(':foto_miniatura', null, PDO::PARAM_NULL);
     }
 
+    $stmt->execute();
+} catch (PDOException $e) {
     $sqlState = (string) $e->getCode();
     $driverCode = (int) ($e->errorInfo[1] ?? 0);
 
@@ -199,10 +177,6 @@ try {
         $data
     );
 } catch (Throwable $e) {
-    if (is_file($destinationPath)) {
-        @unlink($destinationPath);
-    }
-
     error_log('[Fundacion Taboada] Error inesperado: ' . $e->getMessage());
     $debugInfo = (defined('APP_DEBUG') && APP_DEBUG) ? ' (' . $e->getMessage() . ')' : '';
 
