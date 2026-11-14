@@ -10,8 +10,32 @@ if (basename($_SERVER['SCRIPT_FILENAME'] ?? '') === basename(__FILE__)) {
     exit('Acceso denegado.');
 }
 
-require_once dirname(__DIR__) . '/config/config.php';
+$configFile = dirname(__DIR__) . '/config/config.php';
+$exampleConfigFile = dirname(__DIR__) . '/config/config.example.php';
+
+if (is_file($configFile)) {
+    require_once $configFile;
+} elseif (is_file($exampleConfigFile)) {
+    require_once $exampleConfigFile;
+} else {
+    http_response_code(500);
+    exit('Falta el archivo de configuración.');
+}
+
 require_once dirname(__DIR__) . '/config/database.php';
+
+/**
+ * Indica si existe el archivo de configuración real con credenciales propias.
+ */
+function isDatabaseConfigured(): bool
+{
+    $configFile = dirname(__DIR__) . '/config/config.php';
+    if (!is_file($configFile)) {
+        return false;
+    }
+
+    return defined('DB_PASS') && DB_PASS !== 'CAMBIA_ESTA_CONTRASENA';
+}
 
 if (defined('APP_TIMEZONE') && APP_TIMEZONE !== '') {
     date_default_timezone_set(APP_TIMEZONE);
@@ -96,5 +120,5 @@ function isAjaxRequest(): bool
     }
 
     $accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
-    return str_contains($accept, 'application/json');
+    return strpos($accept, 'application/json') !== false;
 }

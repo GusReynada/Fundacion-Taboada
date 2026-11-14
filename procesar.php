@@ -89,6 +89,16 @@ if (!$validation['valid'] || $validation['photo'] === null) {
     );
 }
 
+if (!isDatabaseConfigured()) {
+    sendResponse(
+        false,
+        500,
+        'Falta crear y configurar el archivo config/config.php con tus credenciales MySQL de Hostinger.',
+        [],
+        $data
+    );
+}
+
 $photo = $validation['photo'];
 
 if (!is_dir(UPLOAD_PHOTOS_DIR)) {
