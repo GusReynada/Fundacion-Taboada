@@ -113,8 +113,8 @@ if ($photoBytes === false || $photoBytes === '') {
     );
 }
 
-$thumbMaxDimension = defined('THUMBNAIL_MAX_DIMENSION') ? (int) THUMBNAIL_MAX_DIMENSION : 160;
-$thumbJpegQuality = defined('THUMBNAIL_JPEG_QUALITY') ? (int) THUMBNAIL_JPEG_QUALITY : 45;
+$thumbMaxDimension = defined('THUMBNAIL_MAX_DIMENSION') ? (int) THUMBNAIL_MAX_DIMENSION : 480;
+$thumbJpegQuality = defined('THUMBNAIL_JPEG_QUALITY') ? (int) THUMBNAIL_JPEG_QUALITY : 75;
 
 $thumbnailBytes = createPhotoThumbnail(
     $photoBytes,

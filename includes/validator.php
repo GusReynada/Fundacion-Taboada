@@ -280,15 +280,15 @@ function validateRegistrationInput(
 }
 
 /**
- * Genera una copia de baja calidad y peso reducido (JPEG máx. 160x160 px, calidad 45)
+ * Genera una versión miniatura optimizada (JPEG máx. 480x480 px, calidad 75)
  * a partir de la fotografía original para almacenarla en `aloFotoMiniatura`.
  * Devuelve null si GD no está disponible o si la imagen no puede procesarse.
  */
 function createPhotoThumbnail(
     string $binaryData,
     string $mime,
-    int $maxDimension = 160,
-    int $jpegQuality = 45,
+    int $maxDimension = 480,
+    int $jpegQuality = 75,
     ?string $sourcePath = null
 ): ?string {
     if ($binaryData === '' || !function_exists('imagecreatefromstring')) {
