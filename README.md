@@ -15,13 +15,17 @@ Sitio web de formulario único en **HTML5, CSS3, JavaScript y PHP (PDO) + MySQL*
 ## Estructura del proyecto
 
 ```text
-├── .htaccess                  # Reglas de seguridad (bloquea listados, .sql, .md, archivos ocultos)
+├── .htaccess                  # Reglas de seguridad y ruta limpia /alumnos
 ├── .gitignore                 # Evita subir credenciales reales y fotos de prueba a Git
 ├── index.php                  # Formulario de registro
+├── alumnos.php                # Vista privada de cards y modal (/alumnos)
+├── foto.php                   # Entrega protegida de aloFotoMiniatura y aloFoto
 ├── procesar.php               # Endpoint POST: valida datos, guarda foto y registra en MySQL
 ├── assets/
-│   ├── css/styles.css         # Estilos responsivos
-│   └── js/app.js              # Vista previa de foto, validación y envío por fetch()
+│   ├── css/styles.css         # Estilos base y del formulario
+│   ├── css/alumnos.css        # Estilos de cards, buscador, paginación y modal
+│   ├── js/app.js              # Vista previa de foto, validación y envío por fetch()
+│   └── js/alumnos.js          # Lógica de modal y carga bajo demanda de aloFoto
 ├── config/
 │   ├── .htaccess              # Bloquea acceso HTTP directo a la configuración
 │   ├── config.example.php     # Plantilla de referencia
@@ -63,9 +67,10 @@ define('DB_PORT', '3306');
 define('DB_NAME', 'u123456789_taboada');   // Tu base de datos de Hostinger
 define('DB_USER', 'u123456789_taboada');   // Tu usuario MySQL de Hostinger
 define('DB_PASS', 'TU_CONTRASENA_MYSQL');  // Tu contraseña MySQL
+define('ADMIN_ACCESS_PASSWORD', 'TU_CONTRASENA_DE_CONSULTA'); // Contraseña para entrar a /alumnos
 ```
 
-> **Nota:** En Hostinger, el host MySQL puede ser `localhost` o la IP de MySQL remoto que te indique hPanel. Deja `APP_DEBUG` en `false` en producción para no exponer detalles internos en caso de error.
+> **Nota:** En Hostinger, el host MySQL puede ser `localhost` o la IP de MySQL remoto que te indique hPanel. Deja `APP_DEBUG` en `false` en producción para no exponer detalles internos en caso de error. La sección `/alumnos` no tiene enlaces visibles desde el formulario y requiere `ADMIN_ACCESS_PASSWORD`.
 
 ### 4. Subir los archivos a Hostinger
 1. Entra a **Administrador de archivos** en hPanel (o conéctate por FTP con FileZilla).

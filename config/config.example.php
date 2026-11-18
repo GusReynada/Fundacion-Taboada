@@ -27,6 +27,8 @@ define('APP_NAME', 'Fundación Taboada');
 define('APP_TIMEZONE', 'America/Mexico_City');
 // Mantener en false en producción (Hostinger) para no mostrar errores técnicos al usuario.
 define('APP_DEBUG', false);
+// Contraseña para acceder a la sección privada /alumnos (admite texto plano o password_hash)
+define('ADMIN_ACCESS_PASSWORD', 'CAMBIA_ESTA_CONTRASENA_ADMIN');
 
 // --- Configuración de fotografías y miniaturas ---
 define('MAX_PHOTO_SIZE_BYTES', 5 * 1024 * 1024); // 5 MB

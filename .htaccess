@@ -1,6 +1,11 @@
 Options -Indexes
 DirectoryIndex index.php index.html
 
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^alumnos/?$ alumnos.php [L,QSA]
+</IfModule>
+
 <FilesMatch "^(\.env|\.git|\.ht)">
     <IfModule mod_authz_core.c>
         Require all denied

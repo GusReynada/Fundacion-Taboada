@@ -122,3 +122,92 @@ function isAjaxRequest(): bool
     $accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
     return strpos($accept, 'application/json') !== false;
 }
+
+/**
+ * Devuelve la ruta base de la aplicación sin barra final (ej. '' o '/subcarpeta').
+ */
+function getBaseUrlPath(): string
+{
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
+    $dir = str_replace('\\', '/', dirname($scriptName));
+    if ($dir === '/' || $dir === '.' || $dir === '\\') {
+        return '';
+    }
+
+    return rtrim($dir, '/');
+}
+
+/**
+ * Indica si existe una contraseña configurada para el acceso a /alumnos.
+ */
+function isAdminPasswordConfigured(): bool
+{
+    if (!defined('ADMIN_ACCESS_PASSWORD') || !is_string(ADMIN_ACCESS_PASSWORD)) {
+        return false;
+    }
+
+    return ADMIN_ACCESS_PASSWORD !== '' && ADMIN_ACCESS_PASSWORD !== 'CAMBIA_ESTA_CONTRASENA_ADMIN';
+}
+
+/**
+ * Verifica la contraseña ingresada para acceder a /alumnos.
+ */
+function verifyAdminPassword(string $password): bool
+{
+    if (!isAdminPasswordConfigured() || $password === '') {
+        return false;
+    }
+
+    $configured = (string) ADMIN_ACCESS_PASSWORD;
+    if (strpos($configured, '$2y$') === 0 || strpos($configured, '$argon2') === 0) {
+        return password_verify($password, $configured);
+    }
+
+    return hash_equals($configured, $password);
+}
+
+/**
+ * Indica si la sesión actual está autorizada para ver /alumnos y las fotografías.
+ */
+function isAdminAuthenticated(): bool
+{
+    return isAdminPasswordConfigured()
+        && !empty($_SESSION['alumnos_authenticated'])
+        && $_SESSION['alumnos_authenticated'] === true;
+}
+
+/**
+ * Formatea una fecha YYYY-MM-DD en español legible sin depender de locale del sistema.
+ */
+function formatSpanishDate(?string $isoDate): string
+{
+    if ($isoDate === null || trim($isoDate) === '') {
+        return 'Sin fecha registrada';
+    }
+
+    $dt = DateTimeImmutable::createFromFormat('!Y-m-d', trim($isoDate));
+    if ($dt === false) {
+        return $isoDate;
+    }
+
+    $months = [
+        1  => 'enero',
+        2  => 'febrero',
+        3  => 'marzo',
+        4  => 'abril',
+        5  => 'mayo',
+        6  => 'junio',
+        7  => 'julio',
+        8  => 'agosto',
+        9  => 'septiembre',
+        10 => 'octubre',
+        11 => 'noviembre',
+        12 => 'diciembre',
+    ];
+
+    $day = (int) $dt->format('j');
+    $month = $months[(int) $dt->format('n')] ?? $dt->format('m');
+    $year = $dt->format('Y');
+
+    return "{$day} de {$month} de {$year}";
+}
