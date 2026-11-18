@@ -5,7 +5,7 @@ Sitio web de formulario único en **HTML5, CSS3, JavaScript y PHP (PDO) + MySQL*
 ## Campos incluidos (tabla `alumnos`)
 
 - **Nombre** (`aloNombreCompleto`)
-- **Foto** (`aloFoto` y `aloFotoMiniatura` — validada como JPG, PNG o WEBP hasta 5 MB; se almacena en formato binario `LONGBLOB` junto con su miniatura generada si GD está activo)
+- **Foto** (`aloFoto` y `aloFotoMiniatura` — validada como JPG, PNG o WEBP hasta 5 MB; `aloFoto` guarda la imagen original en `LONGBLOB` y `aloFotoMiniatura` almacena una copia comprimida de baja calidad en JPEG de máx. 160×160 px para miniaturas)
 - **Carrera** (`aloCarrera`)
 - **Universidad** (`aloUniversidad`)
 - **Correo** (`aloCorreo`)

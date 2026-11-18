@@ -28,7 +28,9 @@ define('APP_TIMEZONE', 'America/Mexico_City');
 // Mantener en false en producción (Hostinger) para no mostrar errores técnicos al usuario.
 define('APP_DEBUG', false);
 
-// --- Configuración de fotografías ---
+// --- Configuración de fotografías y miniaturas ---
 define('MAX_PHOTO_SIZE_BYTES', 5 * 1024 * 1024); // 5 MB
+define('THUMBNAIL_MAX_DIMENSION', 160);           // Tamaño máximo de miniatura en px
+define('THUMBNAIL_JPEG_QUALITY', 45);             // Calidad JPEG baja (0-100) para aloFotoMiniatura
 define('UPLOAD_PHOTOS_DIR', dirname(__DIR__) . '/uploads/fotos');
 define('UPLOAD_PHOTOS_RELATIVE_DIR', 'uploads/fotos');

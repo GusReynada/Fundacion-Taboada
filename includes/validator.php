@@ -280,11 +280,17 @@ function validateRegistrationInput(
 }
 
 /**
- * Genera una versión miniatura (máx. 300x300 px) en binario para `aloFotoMiniatura`.
+ * Genera una copia de baja calidad y peso reducido (JPEG máx. 160x160 px, calidad 45)
+ * a partir de la fotografía original para almacenarla en `aloFotoMiniatura`.
  * Devuelve null si GD no está disponible o si la imagen no puede procesarse.
  */
-function createPhotoThumbnail(string $binaryData, string $mime, int $maxDimension = 300): ?string
-{
+function createPhotoThumbnail(
+    string $binaryData,
+    string $mime,
+    int $maxDimension = 160,
+    int $jpegQuality = 45,
+    ?string $sourcePath = null
+): ?string {
     if ($binaryData === '' || !function_exists('imagecreatefromstring')) {
         return null;
     }
@@ -294,17 +300,40 @@ function createPhotoThumbnail(string $binaryData, string $mime, int $maxDimensio
         return null;
     }
 
+    // Corregir orientación EXIF en fotos JPEG tomadas desde dispositivos móviles
+    if ($mime === 'image/jpeg' && $sourcePath !== null && is_file($sourcePath) && function_exists('exif_read_data')) {
+        $exif = @exif_read_data($sourcePath);
+        $orientation = is_array($exif) ? (int) ($exif['Orientation'] ?? 1) : 1;
+        $angle = null;
+        if ($orientation === 3) {
+            $angle = 180;
+        } elseif ($orientation === 6) {
+            $angle = -90;
+        } elseif ($orientation === 8) {
+            $angle = 90;
+        }
+        if ($angle !== null && function_exists('imagerotate')) {
+            $rotated = @imagerotate($source, $angle, 0);
+            if ($rotated !== false) {
+                $source = $rotated;
+            }
+        }
+    }
+
     $origWidth = imagesx($source);
     $origHeight = imagesy($source);
     if ($origWidth < 1 || $origHeight < 1) {
         return null;
     }
 
-    if ($origWidth <= $maxDimension && $origHeight <= $maxDimension) {
+    $safeMaxDimension = max(32, $maxDimension);
+    $safeQuality = max(10, min(95, $jpegQuality));
+
+    if ($origWidth <= $safeMaxDimension && $origHeight <= $safeMaxDimension) {
         $targetWidth = $origWidth;
         $targetHeight = $origHeight;
     } else {
-        $scale = min($maxDimension / $origWidth, $maxDimension / $origHeight);
+        $scale = min($safeMaxDimension / $origWidth, $safeMaxDimension / $origHeight);
         $targetWidth = max(1, (int) round($origWidth * $scale));
         $targetHeight = max(1, (int) round($origHeight * $scale));
     }
@@ -314,13 +343,11 @@ function createPhotoThumbnail(string $binaryData, string $mime, int $maxDimensio
         return null;
     }
 
-    if ($mime === 'image/png' || $mime === 'image/webp') {
-        imagealphablending($thumb, false);
-        imagesavealpha($thumb, true);
-        $transparent = imagecolorallocatealpha($thumb, 0, 0, 0, 127);
-        if ($transparent !== false) {
-            imagefilledrectangle($thumb, 0, 0, $targetWidth, $targetHeight, $transparent);
-        }
+    // Fondo blanco para evitar fondos negros al convertir PNG/WEBP con transparencia a JPEG
+    imagealphablending($thumb, true);
+    $white = imagecolorallocate($thumb, 255, 255, 255);
+    if ($white !== false) {
+        imagefilledrectangle($thumb, 0, 0, $targetWidth, $targetHeight, $white);
     }
 
     if (!imagecopyresampled($thumb, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $origWidth, $origHeight)) {
@@ -329,12 +356,12 @@ function createPhotoThumbnail(string $binaryData, string $mime, int $maxDimensio
 
     ob_start();
     $saved = false;
-    if ($mime === 'image/png' && function_exists('imagepng')) {
-        $saved = imagepng($thumb, null, 6);
-    } elseif ($mime === 'image/webp' && function_exists('imagewebp')) {
-        $saved = imagewebp($thumb, null, 82);
-    } elseif (function_exists('imagejpeg')) {
-        $saved = imagejpeg($thumb, null, 82);
+    if (function_exists('imagejpeg')) {
+        $saved = imagejpeg($thumb, null, $safeQuality);
+    } elseif (function_exists('imagewebp')) {
+        $saved = imagewebp($thumb, null, $safeQuality);
+    } elseif (function_exists('imagepng')) {
+        $saved = imagepng($thumb, null, 9);
     }
     $output = ob_get_clean();
 

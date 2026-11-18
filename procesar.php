@@ -113,7 +113,21 @@ if ($photoBytes === false || $photoBytes === '') {
     );
 }
 
-$thumbnailBytes = createPhotoThumbnail($photoBytes, $photo['mime']);
+$thumbMaxDimension = defined('THUMBNAIL_MAX_DIMENSION') ? (int) THUMBNAIL_MAX_DIMENSION : 160;
+$thumbJpegQuality = defined('THUMBNAIL_JPEG_QUALITY') ? (int) THUMBNAIL_JPEG_QUALITY : 45;
+
+$thumbnailBytes = createPhotoThumbnail(
+    $photoBytes,
+    $photo['mime'],
+    $thumbMaxDimension,
+    $thumbJpegQuality,
+    $photo['tmp_name']
+);
+
+if ($thumbnailBytes === null) {
+    error_log('[Fundacion Taboada] No se pudo comprimir la miniatura; se copiará la foto original en aloFotoMiniatura.');
+    $thumbnailBytes = $photoBytes;
+}
 
 try {
     $pdo = getDatabaseConnection();
@@ -145,11 +159,7 @@ try {
     $stmt->bindValue(':correo', $data['correo'], PDO::PARAM_STR);
     $stmt->bindValue(':telefono', $data['telefono'], PDO::PARAM_STR);
     $stmt->bindValue(':fecha_nacimiento', $data['fecha_cumpleanos'], PDO::PARAM_STR);
-    if ($thumbnailBytes !== null) {
-        $stmt->bindValue(':foto_miniatura', $thumbnailBytes, PDO::PARAM_LOB);
-    } else {
-        $stmt->bindValue(':foto_miniatura', null, PDO::PARAM_NULL);
-    }
+    $stmt->bindValue(':foto_miniatura', $thumbnailBytes, PDO::PARAM_LOB);
 
     $stmt->execute();
 } catch (PDOException $e) {
